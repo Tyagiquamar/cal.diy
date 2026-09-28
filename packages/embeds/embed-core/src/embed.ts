@@ -23,7 +23,13 @@ import { ModalBox } from "./ModalBox/ModalBox";
 import type { EventData, EventDataMap } from "./sdk-action-manager";
 import { SdkActionManager } from "./sdk-action-manager";
 import tailwindCss from "./tailwindCss";
-import type { EmbedPageType, ModalPrerenderOptions, PrefillAndIframeAttrsConfig, UiConfig } from "./types";
+import type {
+  EmbedPageType,
+  ModalPrerenderOptions,
+  PrefillAndIframeAttrsConfig,
+  PrefillValue,
+  UiConfig,
+} from "./types";
 import { getMaxHeightForModal } from "./ui-utils";
 
 // Exporting for consumption by @calcom/embed-core user
@@ -693,10 +699,14 @@ export class Cal {
         if (embedConfig1Value instanceof Array && embedConfig2Value instanceof Array) {
           return (
             embedConfig1Value.length === embedConfig2Value.length &&
-            embedConfig1Value.every((value: string) => embedConfig2Value.includes(value))
+            embedConfig1Value.every((value: PrefillValue) => embedConfig2Value.includes(value))
           );
         }
-        if (typeof embedConfig1Value === "string") {
+        if (
+          typeof embedConfig1Value === "string" ||
+          typeof embedConfig1Value === "number" ||
+          typeof embedConfig1Value === "boolean"
+        ) {
           return embedConfig1Value === embedConfig2Value;
         }
         return true;

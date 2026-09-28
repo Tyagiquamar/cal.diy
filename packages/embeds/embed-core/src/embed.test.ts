@@ -805,6 +805,48 @@ describe("Cal", () => {
       );
     });
 
+    it("should connect (not noAction) when a number config goes 0 -> 1", async () => {
+      const baseModalArgs = {
+        calLink: "john-doe/meeting",
+        config: { theme: "light", layout: "modern", seats: 0 },
+      };
+
+      // 1. Prerender the modal with seats: 0
+      await calInstance.api.modal({ ...baseModalArgs, __prerender: true });
+      vi.mocked(calInstance.doInIframe).mockClear();
+
+      // 2. Reopen with seats: 1. The falsy 0 must not be dropped and the
+      // change must be detected so the iframe connects with seats=1.
+      await calInstance.api.modal({
+        ...baseModalArgs,
+        config: { ...baseModalArgs.config, seats: 1 },
+      });
+
+      expect(calInstance.doInIframe).toHaveBeenCalledWith(expect.objectContaining({ method: "connect" }));
+    });
+
+    it("should connect (not noAction) when a boolean config goes false -> true", async () => {
+      const baseModalArgs = {
+        calLink: "john-doe/meeting",
+        config: { theme: "light", layout: "modern", flag: false },
+      };
+
+      // 1. Prerender the modal with flag: false
+      await calInstance.api.modal({ ...baseModalArgs, __prerender: true });
+      vi.mocked(calInstance.doInIframe).mockClear();
+
+      // 2. Reopen with flag: true. The falsy false must not be dropped and
+      // the change must be detected so the iframe connects with flag=true.
+      await calInstance.api.modal({
+        ...baseModalArgs,
+        config: { ...baseModalArgs.config, flag: true },
+      });
+
+      expect(calInstance.doInIframe).toHaveBeenCalledWith(
+        expect.objectContaining({ method: "connect" })
+      );
+    });
+
     it("should clear stale __reloadInitiated from queue when loadInIframe is called again", () => {
       // This tests the queue clearing behavior that prevents stale __reloadInitiated
       // from causing bookerReloaded to fire incorrectly
@@ -921,6 +963,30 @@ describe("Cal", () => {
           ...baseArgs.stateData,
           embedConfig: { param: 1 },
           previousEmbedConfig: { param: { a: 1 } },
+        },
+      });
+      expect(result).toBe("connect");
+    });
+
+    it("should return connect when a number config goes 0 -> 1", () => {
+      const result = calInstance.getNextActionForModal({
+        ...baseArgs,
+        stateData: {
+          ...baseArgs.stateData,
+          embedConfig: { seats: 1 },
+          previousEmbedConfig: { seats: 0 },
+        },
+      });
+      expect(result).toBe("connect");
+    });
+
+    it("should return connect when a boolean config goes false -> true", () => {
+      const result = calInstance.getNextActionForModal({
+        ...baseArgs,
+        stateData: {
+          ...baseArgs.stateData,
+          embedConfig: { flag: true },
+          previousEmbedConfig: { flag: false },
         },
       });
       expect(result).toBe("connect");
